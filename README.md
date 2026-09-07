@@ -6,6 +6,10 @@ a manual (human) review before treatment. The core trade-off: reviewing more
 patients catches AI errors on truly critical cases, but consumes the same
 clinical staff time needed to treat everyone else.
 
+**[▶ Try the live interactive dashboard](https://YOUR-APP-NAME.streamlit.app)**
+
+![Dashboard screenshot](dashboard/screenshot.png)
+
 ## Files
 
 - `simulation.py` — core discrete-event simulation (built with [SimPy](https://simpy.readthedocs.io)).
@@ -16,6 +20,9 @@ clinical staff time needed to treat everyone else.
   review threshold to trace the safety/workload trade-off, and runs a
   sensitivity analysis over AI accuracy. Produces `figures/*.png` and `.csv`.
 - `figures/` — output charts and raw result tables.
+- `dashboard/app.py` — interactive [Streamlit](https://streamlit.io) app: adjust AI
+  accuracy, staff levels, and review threshold live and see the safety/workload
+  trade-off update in real time.
 
 ## Policies compared
 
@@ -43,9 +50,21 @@ uniformly all shift long.
 ## Reproducing
 
 ```bash
-pip install simpy numpy pandas matplotlib
-python3 experiments.py
+pip install -r requirements.txt
+python3 experiments.py        # regenerate figures/*.png and *.csv
+
+# interactive dashboard
+cd dashboard
+pip install -r requirements.txt
+streamlit run app.py
 ```
+
+## Deploying the dashboard (free)
+
+1. Push this repo to GitHub (public).
+2. Go to [share.streamlit.io](https://share.streamlit.io), sign in with GitHub.
+3. "New app" → select this repo → set **main file path** to `dashboard/app.py`.
+4. Deploy. You'll get a public URL like `https://your-app-name.streamlit.app`.
 
 ## Data
 
