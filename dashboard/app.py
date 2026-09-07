@@ -19,9 +19,6 @@ from simulation import SimConfig, Policy, run_simulation, summarize
 
 st.set_page_config(page_title="AI Triage Trade-off Simulator", page_icon="🏥", layout="wide")
 
-# ----------------------------------------------------------------------
-# Cached simulation helpers
-# ----------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def replicate(cfg_dict, policy_kind, policy_kwargs, n_reps, base_seed=100):
     cfg = SimConfig(**cfg_dict)
@@ -62,11 +59,7 @@ def agg_row(rep_df, label):
         "% patients reviewed": rep_df["pct_reviewed"].mean(),
     }
 
-
-# ----------------------------------------------------------------------
-# Sidebar controls
-# ----------------------------------------------------------------------
-st.sidebar.title("🎛️ Simulation controls")
+st.sidebar.title("Simulation controls")
 
 sigma = st.sidebar.slider(
     "AI noise (σ)", 0.3, 1.8, 0.9, 0.1,
@@ -96,10 +89,7 @@ st.sidebar.caption(
 
 cfg_dict = dict(ai_noise_sigma=sigma, n_staff=n_staff)
 
-# ----------------------------------------------------------------------
-# Header
-# ----------------------------------------------------------------------
-st.title("🏥 AI-Assisted ED Triage: Safety vs. Workload Trade-off")
+st.title(" AI-Assisted ED Triage: Safety vs. Workload Trade-off")
 st.markdown(
     "An AI system scores every arriving patient's urgency. Should a human "
     "double-check it? This simulator compares four review policies under a "
@@ -108,9 +98,6 @@ st.markdown(
     "every review has a real opportunity cost."
 )
 
-# ----------------------------------------------------------------------
-# Run simulations
-# ----------------------------------------------------------------------
 with st.spinner("Running simulations..."):
     t0 = time.time()
     rep_none = replicate(cfg_dict, "none", {}, n_reps)
@@ -127,9 +114,6 @@ summary = pd.DataFrame([
     agg_row(rep_dyn, "Dynamic heuristic"),
 ])
 
-# ----------------------------------------------------------------------
-# KPI cards for the two policies people care about most
-# ----------------------------------------------------------------------
 st.subheader("Fixed threshold vs. dynamic heuristic, head to head")
 c1, c2, c3 = st.columns(3)
 fixed_row = summary[summary["Policy"].str.startswith("Fixed")].iloc[0]
@@ -160,9 +144,6 @@ c3.metric(
 )
 st.caption(f"({n_reps} replications per policy, computed in {elapsed:.1f}s)")
 
-# ----------------------------------------------------------------------
-# Full comparison table
-# ----------------------------------------------------------------------
 st.subheader("All four policies")
 st.dataframe(
     summary.style.format({
@@ -175,10 +156,14 @@ st.dataframe(
     width="stretch",
     hide_index=True,
 )
+st.download_button(
+    label="Download this comparison as CSV",
+    data=summary.to_csv(index=False).encode("utf-8"),
+    file_name=f"ed_triage_policy_comparison_sigma{sigma}_N{n_staff}_tau{tau_user}.csv",
+    mime="text/csv",
+    help="Download the table above (current slider settings) as a CSV file.",
+)
 
-# ----------------------------------------------------------------------
-# Bar charts
-# ----------------------------------------------------------------------
 st.subheader("Comparison charts")
 colors = ["#4C72B0", "#DD8452", "#55A868", "#C44E52"]
 fig, axes = plt.subplots(1, 3, figsize=(14, 4))
@@ -200,9 +185,6 @@ axes[2].tick_params(axis="x", rotation=25)
 plt.tight_layout()
 st.pyplot(fig)
 
-# ----------------------------------------------------------------------
-# Tau sweep
-# ----------------------------------------------------------------------
 st.subheader("Safety / workload frontier")
 st.markdown(
     "As the fixed review threshold τ increases, fewer patients are reviewed: "
@@ -231,11 +213,14 @@ ax2.scatter([0.15], [dyn_row["Reviewer minutes / shift"]], marker="*", s=300,
 plt.title(f"Trade-off curve (σ={sigma}, N={n_staff})")
 fig2.tight_layout()
 st.pyplot(fig2)
+st.download_button(
+    label="\Download trade-off curve data as CSV",
+    data=sweep_df.to_csv(index=False).encode("utf-8"),
+    file_name=f"ed_triage_tau_sweep_sigma{sigma}_N{n_staff}.csv",
+    mime="text/csv",
+)
 
-# ----------------------------------------------------------------------
-# Methodology
-# ----------------------------------------------------------------------
-with st.expander("📖 Methodology — how this simulation works"):
+with st.expander("Methodology — how this simulation works"):
     st.markdown(
         """
 Each patient arriving at the ED is scored by a simulated AI (severity 1–5, plus a
@@ -267,5 +252,5 @@ hospital data is used. See `simulation.py` for full parameter documentation.
 st.markdown("---")
 st.caption(
     "Built with SimPy + Streamlit as part of an Operations Research capstone project. "
-    "[View source on GitHub](https://github.com/YOUR-USERNAME/ed-triage-simulation)"
+    "[View source on GitHub](https://github.com/ycchenn/Emergency-Department-Triage-Simulation)"
 )
